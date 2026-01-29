@@ -59,7 +59,7 @@ export async function getProtoc(
 
   // if not: download, extract and cache
   if (!toolPath) {
-    toolPath = await downloadRelease(version);
+    toolPath = await downloadRelease(version, repoToken);
     process.stdout.write("Protoc cached under " + toolPath + os.EOL);
   }
 
@@ -71,7 +71,10 @@ export async function getProtoc(
   core.addPath(path.join(toolPath, "bin"));
 }
 
-async function downloadRelease(version: string): Promise<string> {
+async function downloadRelease(
+  version: string,
+  repoToken: string,
+): Promise<string> {
   // Download
   const fileName: string = getFileName(version, osPlat, osArch);
   const downloadUrl: string = util.format(
@@ -83,7 +86,9 @@ async function downloadRelease(version: string): Promise<string> {
 
   let downloadPath: string | null = null;
   try {
-    downloadPath = await tc.downloadTool(downloadUrl);
+    // Pass authentication token to avoid rate limiting
+    const auth = repoToken ? `token ${repoToken}` : undefined;
+    downloadPath = await tc.downloadTool(downloadUrl, undefined, auth);
   } catch (err) {
     if (err instanceof tc.HTTPError) {
       core.debug(err.message);

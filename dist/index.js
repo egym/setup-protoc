@@ -82,7 +82,7 @@ function getProtoc(version, includePreReleases, repoToken) {
         toolPath = tc.find("protoc", version);
         // if not: download, extract and cache
         if (!toolPath) {
-            toolPath = yield downloadRelease(version);
+            toolPath = yield downloadRelease(version, repoToken);
             process.stdout.write("Protoc cached under " + toolPath + os.EOL);
         }
         // expose outputs
@@ -93,7 +93,7 @@ function getProtoc(version, includePreReleases, repoToken) {
     });
 }
 exports.getProtoc = getProtoc;
-function downloadRelease(version) {
+function downloadRelease(version, repoToken) {
     return __awaiter(this, void 0, void 0, function* () {
         // Download
         const fileName = getFileName(version, osPlat, osArch);
@@ -101,7 +101,9 @@ function downloadRelease(version) {
         process.stdout.write("Downloading archive: " + downloadUrl + os.EOL);
         let downloadPath = null;
         try {
-            downloadPath = yield tc.downloadTool(downloadUrl);
+            // Pass authentication token to avoid rate limiting
+            const auth = repoToken ? `token ${repoToken}` : undefined;
+            downloadPath = yield tc.downloadTool(downloadUrl, undefined, auth);
         }
         catch (err) {
             if (err instanceof tc.HTTPError) {
